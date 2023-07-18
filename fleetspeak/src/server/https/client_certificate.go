@@ -21,6 +21,7 @@ func GetClientCert(req *http.Request, hn string) (*x509.Certificate, error) {
 
 const (
 	key int = iota
+	valueStart
 	value
 	quotedValue
 )
@@ -38,18 +39,29 @@ L:
 		switch state {
 		case key:
 			if string(x.header[i]) == "=" {
-				state = value
+				state = valueStart
 			} else {
 				keyStr.Write([]byte{x.header[i]})
 			}
-		case value:
+		case valueStart:
 			if string(x.header[i]) == `"` {
 				state = quotedValue
 				continue L
-			} else if string(x.header[i]) == ";" {
+			} else {
+				state = value
+			}
+			fallthrough
+		case value:
+			if string(x.header[i]) == ";" {
 				break L
 			} else if string(x.header[i]) == "," {
 				break L
+			}
+			if string(x.header[i]) == `\` {
+				if len(x.header) == i+1 {
+					return "", ""
+				}
+				i++
 			}
 			valueStr.Write([]byte{x.header[i]})
 		case quotedValue:

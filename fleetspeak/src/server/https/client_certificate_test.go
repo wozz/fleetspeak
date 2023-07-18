@@ -41,4 +41,7 @@ func TestXFCCParser(t *testing.T) {
 	if value := extractField("Cert", ""); value != "" {
 		t.Errorf("expect empty value for empty header: %s", value)
 	}
+	if value := extractField("Key", testVector+`;Key=unquoted\"value`); value != `unquoted"value` {
+		t.Errorf("expect backslash quote in value to be parsed correctly: %s", value)
+	}
 }
